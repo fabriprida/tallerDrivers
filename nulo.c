@@ -3,36 +3,40 @@
 #include <linux/kernel.h>
 #include <linux/cdev.h>
 #include <linux/device.h>
+#include <linux/fs.h>
 
-
+#define DEVICE_NAME "devNulo"
 
 ssize_t my_read(struct file *filp, char *data, size_t s, loff_t *off){
     return 0;
 }
 
-ssize_t my_read(struct file *filp, char *data, size_t s, loff_t *off){
+ssize_t my_write(struct file *filp, const char *data, size_t s, loff_t *off){
     return 0;
 }
 
 static struct cdev dev;
 dev_t major;
-static struct class mi_class;
-static struct file_operations fops{
-    .owner = THIS_MODULE, 
+static struct class *mi_class;
+
+static struct file_operations fops = {
+    .owner = THIS_MODULE,
     .read = my_read,
-    .write = my_write          
-}
+    .write = my_write,
+    .open = NULL,
+    .release = NULL, 
+};
 
 static int __init nulo_init(void) {
 	printk(KERN_ALERT "Hola, soy nulo!\n");
     cdev_init(&dev, &fops);
     
     //2
-    alloc_chrdev_region(&major, 0, 1, "nulo");
+    alloc_chrdev_region(&major, 0, 1, DEVICE_NAME);
     cdev_add(&dev, major, 1);
 
-    mi_class = class_create(THIS_MODULE, "nulo");
-    device_create(mi_class, NULL, major, NULL, "nulo");
+    mi_class = class_create(THIS_MODULE, DEVICE_NAME);
+    device_create(mi_class, NULL, major, NULL, DEVICE_NAME);
 
 	return 0;
 }
